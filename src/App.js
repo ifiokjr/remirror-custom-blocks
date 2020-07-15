@@ -1,26 +1,35 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useCallback } from 'react';
+import { BoldExtension } from 'remirror/extension/bold';
+import { RemirrorProvider, useManager, useRemirror } from 'remirror/react';
+import CustomBlockExtension from "./CustomBlockExtension";
+import { ReactComponentExtension } from "@remirror/extension-react-component";
 
-function App() {
+const Editor = () => {
+  const { getRootProps, commands } = useRemirror();
+
+  const toggleCustomBlock = useCallback(() => {
+    commands.toggleCustomBlock();
+  }, [commands]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <div {...getRootProps()} />
+      <button onClick={toggleCustomBlock}>
+        Toggle Custom Block
+      </button>
     </div>
   );
-}
+};
 
-export default App;
+const App = () => {
+  const manager = useManager([new BoldExtension(), new CustomBlockExtension(), new ReactComponentExtension()]);
+
+  return (
+    <RemirrorProvider manager={manager}>
+      <Editor />
+    </RemirrorProvider>
+  );
+};
+
+export default App
+;
