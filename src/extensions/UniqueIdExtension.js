@@ -17,7 +17,7 @@ export default class CustomBlockExtension extends PlainExtension<> {
 
         if (transactions.some((transaction) => transaction.docChanged)) {
           // Adds a unique id to a node
-          nextState.doc.descendants((node, pos) => {
+          nextState.doc.descendants((node, pos, parent) => {
             if (node.isBlock && (!isNodeHasAttribute(node, idAttribute) || isNodeAttributeDuplicate(node, idAttribute, seenIds))) {
               const attrs = node.attrs;
               tr.setNodeMarkup(pos, undefined, {...attrs, [idAttribute]: uuid.v4()});
@@ -27,6 +27,8 @@ export default class CustomBlockExtension extends PlainExtension<> {
             if (existingId) {
               seenIds.push(existingId);
             }
+
+            return false;
           });
         }
 

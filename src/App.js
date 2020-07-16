@@ -3,6 +3,7 @@ import { BoldExtension } from 'remirror/extension/bold';
 import { StrikeExtension } from 'remirror/extension/strike';
 import { ItalicExtension } from 'remirror/extension/italic';
 import { UnderlineExtension } from 'remirror/extension/underline';
+import { BlockquoteExtension } from 'remirror/extension/blockquote';
 import { CodeExtension } from 'remirror/extension/code';
 import { HeadingExtension } from 'remirror/extension/heading';
 import { HardBreakExtension } from 'remirror/extension/hard-break';
@@ -30,12 +31,36 @@ const Editor = () => {
   );
 };
 
+function modifiedNodes(event) {
+  let modifiedNodes = [];
+  const { tr: transaction } = event;
+
+  transaction.mapping.maps.forEach((step, index) => {
+    const doc = event.state.doc; // transaction.docs[index];
+
+    let topLevelBlocks = [];
+    doc.descendants(node => {
+      topLevelBlocks.push(node);
+      return false;
+    })
+
+    doc.nodesBetween(step.ranges[0], step.ranges[0] + step.ranges[1], node => {
+      if (topLevelBlocks.includes(node)) {
+        modifiedNodes.push(node);
+      }
+    })
+  });
+
+  return modifiedNodes;
+}
+
 const App = () => {
   const manager = useManager([
   new BoldExtension(),
   new ItalicExtension(),
   new StrikeExtension(),
   new UnderlineExtension(),
+  new BlockquoteExtension(),
   new CodeExtension(),
   new HeadingExtension(),
   new HardBreakExtension(),
@@ -45,7 +70,7 @@ const App = () => {
   managerSettings: {
     extraAttributes: [
       {
-        identifiers: ['paragraph', 'heading'],
+        identifiers: ['paragraph', 'heading', 'blockquote'],
         attributes: { [idAttribute]: { default: null } },
       }
     ]
@@ -63,6 +88,8 @@ const App = () => {
         if (event.tr && event.tr.docChanged) {
           const saved = event.getRemirrorJSON();
           localStorage.setItem("saved", JSON.stringify(saved));
+
+          console.log(modifiedNodes(event).map(node => node.attrs._id));
         }
 
         setValue(event.state);
