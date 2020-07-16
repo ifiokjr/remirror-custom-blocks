@@ -1,8 +1,6 @@
 import { PlainExtension } from "@remirror/core";
 import uuid from "uuid";
 
-const isTargetNodeOfType = (node, type) => (node.type === type);
-
 const isNodeHasAttribute = (node, attrName) => Boolean(node.attrs && node.attrs[attrName]);
 
 const isNodeAttributeDuplicate = (node, attrName, seenIds) => isNodeHasAttribute(node, attrName) && seenIds.includes(node.attrs[attrName]);
@@ -20,8 +18,7 @@ export default class CustomBlockExtension extends PlainExtension<> {
         if (transactions.some((transaction) => transaction.docChanged)) {
           // Adds a unique id to a node
           nextState.doc.descendants((node, pos) => {
-            const {paragraph} = nextState.schema.nodes;
-            if (isTargetNodeOfType(node, paragraph) && (!isNodeHasAttribute(node, idAttribute) || isNodeAttributeDuplicate(node, idAttribute, seenIds))) {
+            if (node.isBlock && (!isNodeHasAttribute(node, idAttribute) || isNodeAttributeDuplicate(node, idAttribute, seenIds))) {
               const attrs = node.attrs;
               tr.setNodeMarkup(pos, undefined, {...attrs, [idAttribute]: uuid.v4()});
               modified = true;
