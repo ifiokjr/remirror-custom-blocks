@@ -1,5 +1,6 @@
 import { NodeExtension, NodeGroup, convertCommand } from "@remirror/core";
 import { setBlockType } from "@remirror/pm/commands";
+import { textblockTypeInputRule } from '@remirror/pm/inputrules';
 import * as React from "react";
 
 export default class CustomBlockExtension extends NodeExtension<{
@@ -23,11 +24,17 @@ export default class CustomBlockExtension extends NodeExtension<{
     };
   }
 
+  createInputRules() {
+    return [textblockTypeInputRule(/^\s*>\s$/, this.type)];
+  }
+
   get name(): string {
     return "custom";
   }
 
-  ReactComponent = ({ node, forwardRef }) => {
+  ReactComponent({ node, forwardRef }) {
+    debugger;
+
     if (this.options.useContent) {
       return <p {...node.attrs} ref={forwardRef} />;
     }

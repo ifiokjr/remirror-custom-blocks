@@ -1,8 +1,12 @@
+import uuid from "uuid";
 import React, { useCallback } from 'react';
 import { BoldExtension } from 'remirror/extension/bold';
 import { RemirrorProvider, useManager, useRemirror } from 'remirror/react';
 import CustomBlockExtension from "./CustomBlockExtension";
 import { ReactComponentExtension } from "@remirror/extension-react-component";
+import UniqueIdExtension from "./extensions/UniqueIdExtension"
+
+const idAttribute = "_id";
 
 const Editor = () => {
   const { getRootProps, commands } = useRemirror();
@@ -22,7 +26,18 @@ const Editor = () => {
 };
 
 const App = () => {
-  const manager = useManager([new BoldExtension(), new CustomBlockExtension(), new ReactComponentExtension()]);
+
+  const manager = useManager([new UniqueIdExtension({idAttribute})], {
+    managerSettings: {
+      extraAttributes: [
+        {
+          identifiers: ['paragraph'],
+          attributes: { [idAttribute]: { default: null } },
+        }
+      ]
+    }
+  });
+  console.log({ manager })
 
   return (
     <RemirrorProvider manager={manager}>
