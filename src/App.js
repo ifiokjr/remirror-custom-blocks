@@ -7,34 +7,30 @@ import { BlockquoteExtension } from 'remirror/extension/blockquote';
 import { CodeExtension } from 'remirror/extension/code';
 import { HeadingExtension } from 'remirror/extension/heading';
 import { HardBreakExtension } from 'remirror/extension/hard-break';
-import { RemirrorProvider, useManager, useRemirror } from 'remirror/react';
+import { ListPreset } from "remirror/preset/list";
+import { RemirrorProvider, useManager, useRemirror, usePositioner } from 'remirror/react';
 import CustomBlockExtension from "./CustomBlockExtension";
 import UniqueIdExtension from "./extensions/UniqueIdExtension"
 
 const idAttribute = "_id";
 
-const Editor = () => {
-  const { getRootProps, commands } = useRemirror();
-
-  const toggleCustomBlock = useCallback(() => {
-    commands.toggleCustomBlock();
-  }, [commands]);
-
-  return (
-    <div>
-      <div {...getRootProps()} />
-      <button onClick={toggleCustomBlock}>
-        Toggle Custom Block
-      </button>
-    </div>
-  );
-};
+const settings = {
+  managerSettings: {
+    extraAttributes: [
+      {
+        identifiers: ['paragraph', 'heading', 'blockquote', 'custom', 'orderedList', 'bulletList'],
+        attributes: { [idAttribute]: { default: null } },
+      }
+    ]
+  }
+}
 
 function modifiedNodes(event) {
   let modifiedNodes = [];
   const { tr: transaction } = event;
 
-  transaction.mapping.maps.forEach((step, index) => {
+  try {
+transaction.mapping.maps.forEach((step, index) => {
     const doc = event.state.doc; // transaction.docs[index];
 
     let topLevelBlocks = [];
@@ -49,12 +45,80 @@ function modifiedNodes(event) {
       }
     })
   });
+  } catch (err) {
+    // TODO: Remove this catch, solve underlying issues
+    console.error(err);
+  }
+  
 
   return modifiedNodes;
 }
 
+function Menu() {
+  const [activeCommands, setActiveCommands] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+  });
+
+  // The use positioner hook allows for tracking the current selection in the editor.
+  const {top, left, bottom, ref} = usePositioner('bubble');
+
+  const { commands, active } = useRemirror(() => {
+    setActiveCommands({
+      bold: active.bold(),
+      italic: active.italic(),
+      underline: active.underline(),
+    });
+  });
+
+  console.log({ top, left, bottom, position: 'absolute', })
+
+  return (
+    <div ref={ref} style={{ top, left, position: 'absolute', }}>
+      <button
+        onClick={() => commands.toggleBold()}
+        style={{ fontWeight: activeCommands.bold ? 'bold' : undefined }}
+      >
+        B
+      </button>
+      <button
+        onClick={() => commands.toggleItalic()}
+        style={{ fontWeight: activeCommands.italic ? 'bold' : undefined }}
+      >
+        I
+      </button>
+      <button
+        onClick={() => commands.toggleUnderline()}
+        style={{ fontWeight: activeCommands.underline ? 'bold' : undefined }}
+      >
+        U
+      </button>
+    </div>
+  );
+}
+
+const Editor = () => {
+  const { getRootProps, commands } = useRemirror();
+
+  const insertCustomBlock = useCallback(() => {
+    commands.toggleCustomBlock();
+  }, [commands]);
+
+  return (
+    <div>
+      <div {...getRootProps()} />
+      <Menu />
+      <button onClick={insertCustomBlock}>
+        Insert Custom Block
+      </button>
+    </div>
+  );
+};
+
 const App = () => {
-  const manager = useManager([
+
+  const [manager] = useState(useManager([
     new BoldExtension(),
     new ItalicExtension(),
     new StrikeExtension(),
@@ -63,18 +127,12 @@ const App = () => {
     new CodeExtension(),
     new HeadingExtension(),
     new HardBreakExtension(),
+    new ListPreset(),
     new UniqueIdExtension({ idAttribute }),
     new CustomBlockExtension(),
-  ], {
-    managerSettings: {
-      extraAttributes: [
-        {
-          identifiers: ['paragraph', 'heading', 'blockquote', 'custom'],
-          attributes: { [idAttribute]: { default: null } },
-        }
-      ]
-    }
-  });
+  ], settings));
+
+  console.log({ manager })
 
   const initialValue = manager.createState({
     content: JSON.parse(localStorage.getItem("saved") || "{}")

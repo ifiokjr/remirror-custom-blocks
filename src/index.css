@@ -11,3 +11,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.ProseMirror {
+  outline: none;
+  max-width: 1040px;
+  margin: 40px auto;
+}
+
+.custom {
+  background:#efefef;
+  border-radius: 8px;
+  padding: 12px;
+}

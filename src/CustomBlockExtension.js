@@ -1,5 +1,4 @@
-import { NodeExtension, NodeGroup, convertCommand } from "@remirror/core";
-import { setBlockType } from "@remirror/pm/commands";
+import { NodeExtension, NodeGroup } from "@remirror/core";
 import { textblockTypeInputRule } from '@remirror/pm/inputrules';
 import * as React from "react";
 
@@ -16,7 +15,13 @@ export default class CustomBlockExtension extends NodeExtension<{
       block: true,
       content: null,
       group: NodeGroup.Block,
-      toDOM: node => "nav"
+      toDOM: node => ["nav", { class: "custom" }],
+      parseDOM: [{
+        tag: "nav.custom",
+        getAttrs: dom => {
+          return true;
+        }
+      }]
     };
   }
 
