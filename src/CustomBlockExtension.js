@@ -12,15 +12,20 @@ export default class CustomBlockExtension extends NodeExtension<{
         ...extra.defaults(),
         custom: { default: "custom" }
       },
-      content: "inline*",
+      atom: true,
+      block: true,
+      content: null,
       group: NodeGroup.Block,
-      toDOM: node => ["nav", extra.dom(node), 0]
+      toDOM: node => "nav"
     };
   }
 
   createCommands() {
     return {
-      toggleCustomBlock: () => convertCommand(setBlockType(this.type, {}))
+      toggleCustomBlock: (custom) => ({ tr, dispatch }) => {
+        dispatch(tr.insert(tr.selection.from, this.type.create()));
+        return true;
+      },
     };
   }
 
@@ -32,16 +37,10 @@ export default class CustomBlockExtension extends NodeExtension<{
     return "custom";
   }
 
-  ReactComponent({ node, forwardRef }) {
-    debugger;
-
-    if (this.options.useContent) {
-      return <p {...node.attrs} ref={forwardRef} />;
-    }
-
+  ReactComponent = ({ node }) => {
     return (
-      <div contentEditable={false} ref={forwardRef}>
-        Ignore content
+      <div contentEditable={false}>
+        LOOK AT ME CUSTOM BLOCK
       </div>
     );
   };

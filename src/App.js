@@ -9,7 +9,6 @@ import { HeadingExtension } from 'remirror/extension/heading';
 import { HardBreakExtension } from 'remirror/extension/hard-break';
 import { RemirrorProvider, useManager, useRemirror } from 'remirror/react';
 import CustomBlockExtension from "./CustomBlockExtension";
-import { ReactComponentExtension } from "@remirror/extension-react-component";
 import UniqueIdExtension from "./extensions/UniqueIdExtension"
 
 const idAttribute = "_id";
@@ -56,26 +55,27 @@ function modifiedNodes(event) {
 
 const App = () => {
   const manager = useManager([
-  new BoldExtension(),
-  new ItalicExtension(),
-  new StrikeExtension(),
-  new UnderlineExtension(),
-  new BlockquoteExtension(),
-  new CodeExtension(),
-  new HeadingExtension(),
-  new HardBreakExtension(),
-  new UniqueIdExtension({idAttribute}),
-  new ReactComponentExtension()
-], {
-  managerSettings: {
-    extraAttributes: [
-      {
-        identifiers: ['paragraph', 'heading', 'blockquote'],
-        attributes: { [idAttribute]: { default: null } },
-      }
-    ]
-  }
-});
+    new BoldExtension(),
+    new ItalicExtension(),
+    new StrikeExtension(),
+    new UnderlineExtension(),
+    new BlockquoteExtension(),
+    new CodeExtension(),
+    new HeadingExtension(),
+    new HardBreakExtension(),
+    new UniqueIdExtension({ idAttribute }),
+    new CustomBlockExtension(),
+  ], {
+    managerSettings: {
+      extraAttributes: [
+        {
+          identifiers: ['paragraph', 'heading', 'blockquote', 'custom'],
+          attributes: { [idAttribute]: { default: null } },
+        }
+      ]
+    }
+  });
+
   const initialValue = manager.createState({
     content: JSON.parse(localStorage.getItem("saved") || "{}")
   });
@@ -99,5 +99,4 @@ const App = () => {
   );
 };
 
-export default App
-;
+export default App;
