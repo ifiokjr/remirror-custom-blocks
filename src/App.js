@@ -7,10 +7,12 @@ import { BlockquoteExtension } from 'remirror/extension/blockquote';
 import { CodeExtension } from 'remirror/extension/code';
 import { HeadingExtension } from 'remirror/extension/heading';
 import { HardBreakExtension } from 'remirror/extension/hard-break';
+import { DropCursorExtension } from 'remirror/extension/drop-cursor';
+import { AutoLinkExtension } from 'remirror/extension/auto-link';
+import { PlaceholderExtension } from 'remirror/extension/placeholder';
 import { ListPreset } from "remirror/preset/list";
-import { EMPTY_PARAGRAPH_NODE } from "remirror/core"
 import { RemirrorProvider, useManager, useRemirror, usePositioner } from 'remirror/react';
-import CustomBlockExtension from "./CustomBlockExtension";
+import CustomBlockExtension from "./extensions/CustomBlockExtension";
 import UniqueIdExtension from "./extensions/UniqueIdExtension"
 
 const idAttribute = "_id";
@@ -116,7 +118,6 @@ const Editor = () => {
 };
 
 const parsed = JSON.parse(localStorage.getItem("saved") || "{}")
-console.log({ parsed })
 
 function usePersistedValue(manager) {
   // TODO: This doesn't work here although it works in playground
@@ -138,7 +139,7 @@ function usePersistedValue(manager) {
 }
 
 const App = () => {
-  const manager = useManager( [
+  const manager = useManager([
     new BoldExtension(),
     new ItalicExtension(),
     new StrikeExtension(),
@@ -148,9 +149,13 @@ const App = () => {
     new HeadingExtension(),
     new HardBreakExtension(),
     new ListPreset(),
+    new AutoLinkExtension(),
     new UniqueIdExtension({ idAttribute }),
     new CustomBlockExtension(),
-  ], settings);
+    new DropCursorExtension(),
+    new PlaceholderExtension({ placeholder: "Start your initiative… "})
+  ], settings)
+
   const { value, onChange } = usePersistedValue(manager);
 
   return (

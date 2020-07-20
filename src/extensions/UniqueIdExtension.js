@@ -5,7 +5,11 @@ const isNodeHasAttribute = (node, attrName) => Boolean(node.attrs && node.attrs[
 
 const isNodeAttributeDuplicate = (node, attrName, seenIds) => isNodeHasAttribute(node, attrName) && seenIds.includes(node.attrs[attrName]);
 
-export default class CustomBlockExtension extends PlainExtension<> {
+export default class UniqueIdExtension extends PlainExtension<> {
+  get name(): string {
+    return "uniqueId";
+  }
+
   createPlugin() {
     const { idAttribute } = this.options;
 

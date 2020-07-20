@@ -14,10 +14,11 @@ export default class CustomBlockExtension extends NodeExtension<{
       atom: true,
       block: true,
       content: null,
+      draggable: true,
       group: NodeGroup.Block,
-      toDOM: node => ["nav", { class: "custom" }],
+      toDOM: node => ["div", { class: "custom" }],
       parseDOM: [{
-        tag: "nav.custom",
+        tag: "div.custom",
         getAttrs: dom => {
           return true;
         }
