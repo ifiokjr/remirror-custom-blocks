@@ -12,10 +12,16 @@ code {
     monospace;
 }
 
-.ProseMirror {
-  outline: none;
+.editor {
   max-width: 1040px;
   margin: 40px auto;
+}
+
+.ProseMirror {
+  outline: none;
+  border: 1px solid #efefef;
+  white-space: pre-wrap;
+  position: relative;
 }
 
 .custom {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { BoldExtension } from 'remirror/extension/bold';
 import { StrikeExtension } from 'remirror/extension/strike';
 import { ItalicExtension } from 'remirror/extension/italic';
@@ -8,6 +8,7 @@ import { CodeExtension } from 'remirror/extension/code';
 import { HeadingExtension } from 'remirror/extension/heading';
 import { HardBreakExtension } from 'remirror/extension/hard-break';
 import { ListPreset } from "remirror/preset/list";
+import { EMPTY_PARAGRAPH_NODE } from "remirror/core"
 import { RemirrorProvider, useManager, useRemirror, usePositioner } from 'remirror/react';
 import CustomBlockExtension from "./CustomBlockExtension";
 import UniqueIdExtension from "./extensions/UniqueIdExtension"
@@ -30,21 +31,21 @@ function modifiedNodes(event) {
   const { tr: transaction } = event;
 
   try {
-transaction.mapping.maps.forEach((step, index) => {
-    const doc = event.state.doc; // transaction.docs[index];
+    transaction.mapping.maps.forEach((step, index) => {
+      const doc = event.state.doc; // transaction.docs[index];
 
-    let topLevelBlocks = [];
-    doc.descendants(node => {
-      topLevelBlocks.push(node);
-      return false;
-    })
+      let topLevelBlocks = [];
+      doc.descendants(node => {
+        topLevelBlocks.push(node);
+        return false;
+      })
 
-    doc.nodesBetween(step.ranges[0], step.ranges[0] + step.ranges[1], node => {
-      if (topLevelBlocks.includes(node)) {
-        modifiedNodes.push(node);
-      }
-    })
-  });
+      doc.nodesBetween(step.ranges[0], step.ranges[0] + step.ranges[1], node => {
+        if (topLevelBlocks.includes(node)) {
+          modifiedNodes.push(node);
+        }
+      })
+    });
   } catch (err) {
     // TODO: Remove this catch, solve underlying issues
     console.error(err);
@@ -62,7 +63,7 @@ function Menu() {
   });
 
   // The use positioner hook allows for tracking the current selection in the editor.
-  const {top, left, bottom, ref} = usePositioner('bubble');
+  const { top, left, ref } = usePositioner('bubble');
 
   const { commands, active } = useRemirror(() => {
     setActiveCommands({
@@ -72,10 +73,8 @@ function Menu() {
     });
   });
 
-  console.log({ top, left, bottom, position: 'absolute', })
-
   return (
-    <div ref={ref} style={{ top, left, position: 'absolute', }}>
+    <div ref={ref} style={{ top, left, position: 'absolute' }}>
       <button
         onClick={() => commands.toggleBold()}
         style={{ fontWeight: activeCommands.bold ? 'bold' : undefined }}
@@ -106,7 +105,7 @@ const Editor = () => {
   }, [commands]);
 
   return (
-    <div>
+    <div className="editor">
       <div {...getRootProps()} />
       <Menu />
       <button onClick={insertCustomBlock}>
@@ -116,9 +115,30 @@ const Editor = () => {
   );
 };
 
-const App = () => {
+const parsed = JSON.parse(localStorage.getItem("saved") || "{}")
+console.log({ parsed })
 
-  const [manager] = useState(useManager([
+function usePersistedValue(manager) {
+  // TODO: This doesn't work here although it works in playground
+
+  const [value, setValue] = useState(manager.createState({
+    content: parsed
+  }));
+
+  const onChange = useCallback((event) => {
+    if (event.tr && event.tr.docChanged) {
+      // Persist state to localStorage for demo
+      localStorage.setItem("saved", JSON.stringify(event.state.doc.toJSON()));
+    }
+    
+    setValue(event.state);
+  }, []);
+
+  return { value, onChange }
+}
+
+const App = () => {
+  const manager = useManager( [
     new BoldExtension(),
     new ItalicExtension(),
     new StrikeExtension(),
@@ -130,28 +150,15 @@ const App = () => {
     new ListPreset(),
     new UniqueIdExtension({ idAttribute }),
     new CustomBlockExtension(),
-  ], settings));
-
-  console.log({ manager })
-
-  const initialValue = manager.createState({
-    content: JSON.parse(localStorage.getItem("saved") || "{}")
-  });
-
-  const [value, setValue] = useState(initialValue);
+  ], settings);
+  const { value, onChange } = usePersistedValue(manager);
 
   return (
-    <RemirrorProvider manager={manager}       value={value}
-      onChange={event => {
-        if (event.tr && event.tr.docChanged) {
-          const saved = event.getRemirrorJSON();
-          localStorage.setItem("saved", JSON.stringify(saved));
-
-          console.log(modifiedNodes(event).map(node => node.attrs._id));
-        }
-
-        setValue(event.state);
-      }}>
+    <RemirrorProvider
+      manager={manager}
+      value={value}
+      onChange={onChange}
+    >
       <Editor />
     </RemirrorProvider>
   );
