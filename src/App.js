@@ -4,6 +4,7 @@ import { ItalicExtension } from "remirror/extension/italic";
 import { HeadingExtension } from "remirror/extension/heading";
 import { ListPreset } from "remirror/preset/list";
 import { RemirrorProvider, useManager, useRemirror, usePositioner } from "remirror/react";
+import { bubblePositioner } from 'remirror/extension/positioner';
 const EXTENSIONS = [
   new HeadingExtension(),
   new BoldExtension(),
@@ -19,7 +20,7 @@ function Menu() {
     });
 
     // The use positioner hook allows for tracking the current selection in the editor.
-    const { top, left, ref } = usePositioner('bubble');
+    const { top, left, ref, bottom, right } = usePositioner({ ...bubblePositioner, hasChanged: () => true });
 
     const { commands, active } = useRemirror(() => {
       setActiveCommands({
@@ -28,6 +29,8 @@ function Menu() {
         underline: active.underline(),
       });
     });
+
+    console.log('rerendering', {top, left, ref, activeCommands, bottom, right})
 
     return (
       <div ref={ref} style={{ top, left, position: 'absolute', }}>
@@ -66,7 +69,7 @@ function usePersistedValue(manager) {
       const saved = event.state.doc.toJSON();
       localStorage.setItem("saved", JSON.stringify(saved));
     }
-    
+
     setValue(event.state);
   }, []);
 
@@ -76,7 +79,7 @@ function usePersistedValue(manager) {
 /**
  * This component contains the editor and any toolbars/chrome it requires.
  */
-const SmallEditor: FC = () => {
+const SmallEditor = () => {
   const { getRootProps } = useRemirror();
   return (
     <div>
@@ -86,6 +89,7 @@ const SmallEditor: FC = () => {
   );
 };
 const SmallEditorWrapper = () => {
+  console.log('starting')
   const extensionManager = useManager(EXTENSIONS);
   const { value, onChange } = usePersistedValue(extensionManager);
 
